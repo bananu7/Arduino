@@ -1,3 +1,5 @@
+#pragma once
+
 //pins for LEDs
 #define GLED 5
 #define YLED 6
@@ -48,6 +50,11 @@ enum class ControlElement : byte {
 #define FUELCAUTION 10.0         //10% Fuel Caution
 #define FUELWARN 5.0             //5% Fuel warning
 
+// Pin setup
+static const int SASPIN = 8;
+static const int RCSPIN = 9;
+static const int CG1PIN = 10;
+static const int THROTTLEPIN = 0;
 
 struct VesselData
 {
@@ -137,9 +144,9 @@ struct ControlPacket {
 
     inline void setMainControl(ControlElement e, bool state) {
         if (state)
-            MainControls |= (1 << e); 
+            MainControls |= (1 << static_cast<byte>(e)); 
         else
-            MainControls &= ~(1 << e); 
+            MainControls &= ~(1 << static_cast<byte>(e)); 
     }
 
     inline void setControlGroup(unsigned g, bool state) {

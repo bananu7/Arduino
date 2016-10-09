@@ -1,8 +1,10 @@
 #pragma once
 
-inline void Indicators() {
-    caution = 0;
-    warning = 0;
+#include "Structure.h"
+
+inline void Indicators(VesselData const& VData) {
+    int caution = 0;
+    int warning = 0;
 
     caution += VData.G > GCAUTION;
     warning += VData.G > GWARN;
@@ -19,9 +21,9 @@ inline void Indicators() {
     else
         digitalWrite(RLED,LOW);
 
-    digitalWrite(SASLED,ControlStatus(AGSAS));
-    digitalWrite(RCSLED,ControlStatus(AGRCS));
-    digitalWrite(CG1LED,ControlStatus(AGCustom01));
+    digitalWrite(SASLED, VData.getControlStatus(AGSAS));
+    digitalWrite(RCSLED, VData.getControlStatus(AGRCS));
+    digitalWrite(CG1LED, VData.getControlStatus(AGCustom01));
 }
 
 inline void initLEDS() {
