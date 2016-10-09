@@ -1,3 +1,5 @@
+#include "GameConnection.hpp"
+
 GameConnection gc;
 
 void setup() {

@@ -6,23 +6,19 @@
 #define RCSLED 12
 #define CG1LED 13
 
-//pins for input
-#define SASPIN 8
-#define RCSPIN 9
-#define CG1PIN 10
-#define THROTTLEPIN 0
-
 #define THROTTLEDB 4 //Throttle axis deadband
 
 //Input enums
-#define SAS 7
-#define RCS 6
-#define LIGHTS 5
-#define GEAR 4
-#define BRAKES 3
-#define PRECISION 2
-#define ABORT 1
-#define STAGE 0
+enum class ControlElement : byte {
+    SAS = 7,
+    RCS = 6,
+    LIGHTS = 5,
+    GEAR = 4,
+    BRAKES = 3,
+    PRECISION = 2,
+    ABORT = 1,
+    STAGE = 0
+};
 
 //Action group statuses
 #define AGSAS      0
@@ -41,9 +37,6 @@
 #define AGCustom08 13
 #define AGCustom09 14
 #define AGCustom10 15
-
-//macro
-#define details(name) (uint8_t*)&name,sizeof(name)
 
 //if no message received from KSP for more than 2s, go idle
 #define IDLETIMER 2000
@@ -110,6 +103,11 @@ struct VesselData
     float IAS;              //50  Indicated Air Speed
     byte CurrentStage;      //51  Current stage number
     byte TotalStage;        //52  TotalNumber of stages
+
+    bool getControlStatus(byte n) {
+        return ((ActionGroups >> n) & 1) == 1;
+    }
+
 };
 
 struct HandShakePacket
@@ -136,5 +134,19 @@ struct ControlPacket {
     int WheelSteer;                     //-1000 -> 1000
     int Throttle;                       //    0 -> 1000
     int WheelThrottle;                  //    0 -> 1000
+
+    inline void setMainControl(ControlElement e, bool state) {
+        if (state)
+            MainControls |= (1 << e); 
+        else
+            MainControls &= ~(1 << e); 
+    }
+
+    inline void setControlGroup(unsigned g, bool state) {
+        if (state)
+            ControlGroup |= (1 << g); 
+        else
+            ControlGroup &= ~(1 << g); 
+    }
 };
 

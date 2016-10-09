@@ -4,13 +4,12 @@ class GameConnection {
     unsigned long deadtime, deadtimeOld, controlTime, controlTimeOld;
     unsigned long now;
 
-    boolean Connected = false;
+    boolean connected = false;
 
     byte caution = 0, warning = 0, id;
 
     HandShakePacket HPacket;
     VesselData VData;
-    ControlPacket CPacket;
 
     SerialComs comm;
 
@@ -18,7 +17,7 @@ class GameConnection {
         int returnValue = -1;
         now = millis();
 
-        if (KSPBoardReceiveData()) {
+        if (comm.KSPBoardReceiveData()) {
             deadtimeOld = now;
             returnValue = id;
 
@@ -33,13 +32,13 @@ class GameConnection {
 
             //We got some data, turn the green led on
             digitalWrite(GLED,HIGH);
-            Connected = true;
+            connected = true;
         }
         else { //if no message received for a while, go idle
             deadtime = now - deadtimeOld; 
             if (deadtime > IDLETIMER) {
                 deadtimeOld = now;
-                Connected = false;
+                connected = false;
                 LEDSAllOff();
             }    
         }
@@ -57,26 +56,33 @@ class GameConnection {
     }
 
     void controls() {
+        ControlPacket controlPacket;
+
+        static const int SASPIN = 8;
+        static const int RCSPIN = 9;
+        static const int CG1PIN = 10;
+        static const int THROTTLEPIN = 0;
+
         if (connected) {
             if (digitalRead(SASPIN))  //--------- This is how you do main controls
-                MainControls(SAS, HIGH);
+                controlPacket.setMainControl(ControlElement::SAS, true);
             else
-                MainControls(SAS, LOW);
+                controlPacket.setMainControl(ControlElement::SAS, false);
 
             if (digitalRead(RCSPIN))
-                MainControls(RCS, HIGH);
+                controlPacket.setMainControl(ControlElement::RCS, true);
             else
-                MainControls(RCS, LOW);
+                controlPacket.setMainControl(ControlElement::RCS, false);
 
             if (digitalRead(CG1PIN))   //--------- This is how you do control groups
-                ControlGroups(1, HIGH);
+                controlPacket.setControlGroup(1, true);
             else
-                ControlGroups(1, LOW);      
+                controlPacket.setControlGroup(1, false);
 
             //This is an example of reading analog inputs to an axis, with deadband and limits
-            CPacket.Throttle = constrain(map(analogRead(THROTTLEPIN),THROTTLEDB,1024-THROTTLEDB,0,1000),0, 1000);
+            controlPacket.Throttle = constrain(map(analogRead(THROTTLEPIN),THROTTLEDB,1024-THROTTLEDB,0,1000),0, 1000);
 
-            KSPBoardSendData(details(CPacket));
+            comm.KSPBoardSendData(reinterpret_cast<uint8_t*>(&controlPacket), sizeof(controlPacket));
         }
     }
 
@@ -84,24 +90,6 @@ class GameConnection {
         pinMode(SASPIN, INPUT_PULLUP);
         pinMode(RCSPIN, INPUT_PULLUP);
         pinMode(CG1PIN, INPUT_PULLUP);
-    }
-
-    void mainControls(byte n, boolean s) {
-        if (s)
-            CPacket.MainControls |= (1 << n);       // forces nth bit of x to be 1.  all other bits left alone.
-        else
-            CPacket.MainControls &= ~(1 << n);      // forces nth bit of x to be 0.  all other bits left alone.
-    }
-
-    void controlGroups(byte n, boolean s) {
-        if (s)
-            CPacket.ControlGroup |= (1 << n);       // forces nth bit of x to be 1.  all other bits left alone.
-        else
-            CPacket.ControlGroup &= ~(1 << n);      // forces nth bit of x to be 0.  all other bits left alone.
-    }
-
-    byte getControlStatus(byte n) {
-        return ((VData.ActionGroups >> n) & 1) == 1;
     }
 
     void setup() {
