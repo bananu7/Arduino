@@ -114,27 +114,27 @@ struct VesselData
 
 struct HandShakePacket
 {
-  byte id;
-  byte M1;
-  byte M2;
-  byte M3;
+    byte id = 0;
+    byte M1;
+    byte M2;
+    byte M3;
 };
 
 struct ControlPacket {
-  byte id;
-  byte MainControls;                  //SAS RCS Lights Gear Brakes Precision Abort Stage
-  byte Mode;                          //0 = stage, 1 = docking, 2 = map
-  unsigned int ControlGroup;          //control groups 1-10 in 2 bytes
-  byte AdditionalControlByte1;        //other stuff
-  byte AdditionalControlByte2;
-  int Pitch;                          //-1000 -> 1000
-  int Roll;                           //-1000 -> 1000
-  int Yaw;                            //-1000 -> 1000
-  int TX;                             //-1000 -> 1000
-  int TY;                             //-1000 -> 1000
-  int TZ;                             //-1000 -> 1000
-  int WheelSteer;                     //-1000 -> 1000
-  int Throttle;                       //    0 -> 1000
-  int WheelThrottle;                  //    0 -> 1000
+    byte id = 101;
+    byte MainControls;                  //SAS RCS Lights Gear Brakes Precision Abort Stage
+    byte Mode;                          //0 = stage, 1 = docking, 2 = map
+    unsigned int ControlGroup;          //control groups 1-10 in 2 bytes
+    byte AdditionalControlByte1;        //other stuff
+    byte AdditionalControlByte2;
+    int Pitch;                          //-1000 -> 1000
+    int Roll;                           //-1000 -> 1000
+    int Yaw;                            //-1000 -> 1000
+    int TX;                             //-1000 -> 1000
+    int TY;                             //-1000 -> 1000
+    int TZ;                             //-1000 -> 1000
+    int WheelSteer;                     //-1000 -> 1000
+    int Throttle;                       //    0 -> 1000
+    int WheelThrottle;                  //    0 -> 1000
 };
 
