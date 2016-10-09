@@ -51,7 +51,10 @@ class GameConnection {
         controlTime = now - controlTimeOld; 
         if (controlTime > CONTROLREFRESH){
             controlTimeOld = now;
-            controls();
+
+            if (connected) {
+                controls();
+            }
         }
     }
 
@@ -63,27 +66,25 @@ class GameConnection {
         static const int CG1PIN = 10;
         static const int THROTTLEPIN = 0;
 
-        if (connected) {
-            if (digitalRead(SASPIN))  //--------- This is how you do main controls
-                controlPacket.setMainControl(ControlElement::SAS, true);
-            else
-                controlPacket.setMainControl(ControlElement::SAS, false);
+        if (digitalRead(SASPIN))  //--------- This is how you do main controls
+            controlPacket.setMainControl(ControlElement::SAS, true);
+        else
+            controlPacket.setMainControl(ControlElement::SAS, false);
 
-            if (digitalRead(RCSPIN))
-                controlPacket.setMainControl(ControlElement::RCS, true);
-            else
-                controlPacket.setMainControl(ControlElement::RCS, false);
+        if (digitalRead(RCSPIN))
+            controlPacket.setMainControl(ControlElement::RCS, true);
+        else
+            controlPacket.setMainControl(ControlElement::RCS, false);
 
-            if (digitalRead(CG1PIN))   //--------- This is how you do control groups
-                controlPacket.setControlGroup(1, true);
-            else
-                controlPacket.setControlGroup(1, false);
+        if (digitalRead(CG1PIN))   //--------- This is how you do control groups
+            controlPacket.setControlGroup(1, true);
+        else
+            controlPacket.setControlGroup(1, false);
 
-            //This is an example of reading analog inputs to an axis, with deadband and limits
-            controlPacket.Throttle = constrain(map(analogRead(THROTTLEPIN),THROTTLEDB,1024-THROTTLEDB,0,1000),0, 1000);
+        //This is an example of reading analog inputs to an axis, with deadband and limits
+        controlPacket.Throttle = constrain(map(analogRead(THROTTLEPIN),THROTTLEDB,1024-THROTTLEDB,0,1000),0, 1000);
 
-            comm.KSPBoardSendData(reinterpret_cast<uint8_t*>(&controlPacket), sizeof(controlPacket));
-        }
+        comm.KSPBoardSendData(reinterpret_cast<uint8_t*>(&controlPacket), sizeof(controlPacket));
     }
 
     void controlsInit() {
