@@ -24,12 +24,12 @@ public:
 
 private:
     uint8_t rx_len;
-    uint16_t * address;
     byte buffer[256]; //address for temporary storage and parsing buffer
     uint8_t structSize;
     uint8_t rx_array_inx;  //index for RX parsing buffer
     uint8_t calc_CS;       //calculated Chacksum
     int id;
+    ReadResult::TypeOfPacket typeOfPacketProcessed;
 
 public:
     //This shit contains stuff borrowed from EasyTransfer lib
@@ -37,64 +37,76 @@ public:
         ReadResult result;
 
         if ((rx_len == 0)&&(Serial.available()>3)){
-          while(Serial.read()!= 0xBE) {
-            if (Serial.available() == 0)
-              return result;  
-          }
-          if (Serial.read() == 0xEF){
-            rx_len = Serial.read();   
-            id = Serial.read(); 
-            rx_array_inx = 1;
-
-            switch(id) {
-            case 0:
-              structSize = sizeof(HandShakePacket);
-              address = reinterpret_cast<uint16_t*>(&result.handShakePacket);
-              break;
-            case 1:
-              structSize = sizeof(VesselData);   
-              address = reinterpret_cast<uint16_t*>(&result.vesselData);
-              break;
+            while(Serial.read()!= 0xBE) {
+                if (Serial.available() == 0)
+                   return result;  
             }
-          }
+            if (Serial.read() == 0xEF){
+                rx_len = Serial.read();   
+                id = Serial.read(); 
+                rx_array_inx = 1;
 
-          //make sure the binary structs on both Arduinos are the same size.
-          if(rx_len != structSize){
-            rx_len = 0;
-            return result;
-          }   
+                switch(id) {
+                case 0:
+                    typeOfPacketProcessed = ReadResult::TypeOfPacket::HandShakePacket;
+                    structSize = sizeof(HandShakePacket);
+                    break;
+                case 1:
+                    typeOfPacketProcessed = ReadResult::TypeOfPacket::VesselData;
+                    structSize = sizeof(VesselData);
+                    break;
+                }
+            }
+
+            //make sure the binary structs on both Arduinos are the same size.
+            if(rx_len != structSize){
+                rx_len = 0;
+                return result;
+            }   
         }
 
         if(rx_len != 0){
-          while(Serial.available() && rx_array_inx <= rx_len){
-            buffer[rx_array_inx++] = Serial.read();
-          }
-          buffer[0] = id;
-
-          if(rx_len == (rx_array_inx-1)){
-            //seem to have got whole message
-            //last uint8_t is CS
-            calc_CS = rx_len;
-            for (int i = 0; i<rx_len; i++){
-              calc_CS^=buffer[i];
-            } 
-
-            if(calc_CS == buffer[rx_array_inx-1]){//CS good
-              memcpy(address,buffer,structSize);
-              rx_len = 0;
-              rx_array_inx = 1;
-
-              // Success
-              result.status = true;
-              return result;
+            while(Serial.available() && rx_array_inx <= rx_len){
+                buffer[rx_array_inx++] = Serial.read();
             }
-            else{
-              //failed checksum, need to clear this out anyway
-              rx_len = 0;
-              rx_array_inx = 1;
-              return result;
+            buffer[0] = id;
+
+            if(rx_len == (rx_array_inx-1)){
+                //seem to have got whole message
+                //last uint8_t is CS
+                calc_CS = rx_len;
+                for (int i = 0; i<rx_len; i++){
+                    calc_CS^=buffer[i];
+                } 
+
+                if(calc_CS == buffer[rx_array_inx-1]){//CS good
+                    uint16_t * address;
+
+                    switch(typeOfPacketProcessed) {
+                    case ReadResult::TypeOfPacket::HandShakePacket:
+                        address = reinterpret_cast<uint16_t*>(&result.handShakePacket);
+                        break;
+                    case ReadResult::TypeOfPacket::VesselData:
+                        address = reinterpret_cast<uint16_t*>(&result.vesselData);
+                        break;
+                    }
+
+                    memcpy(address, buffer, structSize);
+                    rx_len = 0;
+                    rx_array_inx = 1;
+
+                    // Success
+                    result.status = true;
+                    result.typeOfPacket = typeOfPacketProcessed;
+                    return result;
+                }
+                else {
+                    //failed checksum, need to clear this out anyway
+                    rx_len = 0;
+                    rx_array_inx = 1;
+                    return result;
+                }
             }
-          }
         }
 
         return result;
