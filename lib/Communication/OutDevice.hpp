@@ -1,20 +1,13 @@
 #pragma once
 
-class HardwareSpi {
-public:
-    static void start();
-    static void transmit(byte b);
-    static void end();
-};
-
 template<class Transport, int pin>
-class OutDevice {
+class Sender {
 public:
-    OutDevice() {
+    Sender() {
         pinMode(pin, OUTPUT);
     }
 
-    void transmit(byte b) {
+    inline void send(byte b) {
         digitalWrite(pin, LOW);
 
         Transport::start();
