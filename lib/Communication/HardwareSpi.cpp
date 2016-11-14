@@ -5,7 +5,7 @@ const int clockDivider = SPI_CLOCK_DIV4;
 const int dataMode = SPI_MODE0;
 const int bitOrder = MSBFIRST; 
 
-void HardwareSpi::start() {
+void HardwareSpi::beginTransmission() {
     SPI.begin();
     //set clockDivider to SPI_CLOCK_DIV2 by default which is 8MHz
     
@@ -18,7 +18,7 @@ void HardwareSpi::start() {
     SPI.setBitOrder(bitOrder);
 }
 
-void HardwareSpi::end() {
+void HardwareSpi::endTransmission() {
     SPI.end();
 }
 
