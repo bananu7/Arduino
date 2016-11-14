@@ -4,7 +4,7 @@
 #include "SerialComs.hpp"
 #include "Utilities.hpp"
 
-#include "Panel.hpp"
+#include "maxim.hpp"
 
 class GameConnection {
     unsigned long deadtime, deadtimeOld, controlTime, controlTimeOld;
@@ -13,8 +13,6 @@ class GameConnection {
     boolean connected = false;
     VesselData vesselData;
     SerialComs comm;
-
-    LedPanel<10>* panel;
 
     int input() {
         int returnValue = -1;
@@ -33,9 +31,10 @@ class GameConnection {
                 vesselData = result.vesselData;
                 //Indicators(vesselData);
 
-                bool SasStatus = vesselData.getControlStatus(AGSAS);
-                panel->data(SasStatus, false, false, false, false, false);
-                panel->present();
+                //bool SasStatus = vesselData.getControlStatus(AGSAS);
+                //panel->data(SasStatus, false, false, false, false, false);
+                //panel->present();
+                maxim::writeNumber(vesselData.AP);
                 break;
             }
 
@@ -118,7 +117,7 @@ public:
 
         LEDSAllOff();
 
-        panel = new LedPanel<10>();
+        maxim::setup();
     }
 
     void update()
