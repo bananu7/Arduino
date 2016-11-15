@@ -9,9 +9,18 @@ together.
 #include <inttypes.h>
 #include "../Communication/Sender.hpp"
 
-template<class Sender>
+namespace maxim {
+
+enum class Command : byte {
+    Shutdown = 0x0c,
+    Decode = 0x09,
+    Demo = 0xff,
+    Intensity = 0x0a,
+    Noop = 0
+};
+
 class Maxim {
-    Sender sender;
+    comm::Sender sender;
     
     void writeDigit(int place, int digit, int screen) {
         if (screen == 1) {
@@ -22,8 +31,15 @@ class Maxim {
         }
     }
 
+    void sendCommand(Command c, byte data, int screen) {
+        if (screen == 0) {
+            sender.send(static_cast<byte>(Command::Noop), 0, static_cast<byte>(c), data);
+        } else {
+            sender.send(static_cast<byte>(c), data, static_cast<byte>(Command::Noop), 0);
+        }
+    }
 public:
-    Maxim(Sender sender)
+    Maxim(comm::Sender sender)
         : sender(sender)
     {
         delay(10);
@@ -55,13 +71,17 @@ public:
         delay(1);
 
         // intensity
-        sender.send(0x0a, 0x00, 0x00, 0x00);
-        sender.send(0x00, 0x00, 0x0a, 0x00);
+        setIntensity(0, 0);
+        setIntensity(0, 1);
 
         for (int i = 1; i <= 8; ++i) {
             sender.send(i, 0x7f);
             delay(1);
         }
+    }
+
+    void setIntensity(byte intensity, int screen) {
+        sendCommand(Command::Intensity, intensity, screen);
     }
 
     void writeNumber(int32_t number, int screen) {
@@ -78,8 +98,4 @@ public:
     }
 };
 
-template<typename Sender>
-static Maxim<Sender> make_maxim(Sender sender) {
-    return { sender };
 }
-

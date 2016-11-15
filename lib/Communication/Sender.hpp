@@ -3,13 +3,21 @@
 
 namespace comm {
 
+class SenderI {
+public:
+    virtual void send(byte b) = 0;
+    virtual void send(byte a, byte b) = 0;
+    virtual void send(byte a, byte b, byte c, byte d) = 0;
+    virtual ~SenderI() = default;
+};
+
 template<class Transport, class Latcher>
-class Sender {
+class TemplateSender : public SenderI {
     Transport transport;
     Latcher latcher;
 
 public:
-    Sender(Transport transport, Latcher latcher)
+    TemplateSender(Transport transport, Latcher latcher)
         : transport(transport)
         , latcher(latcher)
     {
@@ -55,9 +63,20 @@ public:
     }*/
 };
 
+class Sender {
+    SenderI* impl;
+public:
+    Sender(SenderI* impl) : impl(impl) { }
+    ~Sender() { delete impl; }
+
+    inline void send(byte b) { impl->send(b); }
+    inline void send(byte a, byte b) { impl->send(a, b); }
+    inline void send(byte a, byte b, byte c, byte d) { impl->send(a,b,c,d); }
+};
+
 template<class Transport, class Latcher>
-inline Sender<Transport, Latcher> make_sender(Transport transport, Latcher latcher) {
-    return { transport, latcher };
+inline Sender make_sender(Transport transport, Latcher latcher) {
+    return Sender(new TemplateSender<Transport, Latcher> { transport, latcher });
 }
 
 }
