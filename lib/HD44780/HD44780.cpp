@@ -41,12 +41,9 @@
 #define LCD_MOVELEFT 0x00
 
 // flags for function set
-#define LCD_8BITMODE 0x10
-#define LCD_4BITMODE 0x00
+
 #define LCD_2LINE 0x08
 #define LCD_1LINE 0x00
-#define LCD_5x10DOTS 0x04
-#define LCD_5x8DOTS 0x00
 
 // When the display powers up, it is configured as follows:
 //
@@ -65,17 +62,42 @@
 //
 // Note, however, that resetting the Arduino doesn't reset the LCD, so we
 // can't assume that its in that state when a sketch starts (and the
-// LiquidC constructor is called).
+// HD44780 constructor is called).
 
-LiquidC::LiquidC(uint8_t ssPin) //SPI  ##############################
+void HD44780::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
+             uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
+             uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
-  initSPI(ssPin);
-  //shiftRegister pins 1,2,3,4,5,6,7 represent rs, rw, enable, d4-7 in that order
-  //but we are not using RW so RW it's zero or 255
-  init(1, 1, 255, 2, 0, 0, 0, 0, 4, 5, 6, 7);   
+  _rs_pin = rs;
+  _rw_pin = rw;
+  _enable_pin = enable;
+  
+  _data_pins[0] = d0;
+  _data_pins[1] = d1;
+  _data_pins[2] = d2;
+  _data_pins[3] = d3; 
+  _data_pins[4] = d4;
+  _data_pins[5] = d5;
+  _data_pins[6] = d6;
+  _data_pins[7] = d7; 
+
+  pinMode(_rs_pin, OUTPUT);
+  // we can save 1 pin by not using RW. Indicate by passing 255 instead of pin#
+  if (_rw_pin != 255) { 
+    pinMode(_rw_pin, OUTPUT);
+  }
+  pinMode(_enable_pin, OUTPUT);
+  
+  if (fourbitmode)
+    _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
+  else 
+    _displayfunction = LCD_8BITMODE | LCD_1LINE | LCD_5x8DOTS;
+  
+  // starts the screen in 16x2 mode by default
+  begin(16, 2);
 }
 
-void LiquidC::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
+void HD44780::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
   if (lines > 1) {
     _displayfunction |= LCD_2LINE;
   }
@@ -151,19 +173,19 @@ void LiquidC::begin(uint8_t cols, uint8_t lines, uint8_t dotsize) {
 }
 
 /********** high level commands, for the user! */
-void LiquidC::clear()
+void HD44780::clear()
 {
   command(LCD_CLEARDISPLAY);  // clear display, set cursor position to zero
   delayMicroseconds(2000);  // this command takes a long time!
 }
 
-void LiquidC::home()
+void HD44780::home()
 {
   command(LCD_RETURNHOME);  // set cursor position to zero
   delayMicroseconds(2000);  // this command takes a long time!
 }
 
-void LiquidC::setCursor(uint8_t col, uint8_t row)
+void HD44780::setCursor(uint8_t col, uint8_t row)
 {
   int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
   if ( row > _numlines ) {
@@ -174,70 +196,70 @@ void LiquidC::setCursor(uint8_t col, uint8_t row)
 }
 
 // Turn the display on/off (quickly)
-void LiquidC::noDisplay() {
+void HD44780::noDisplay() {
   _displaycontrol &= ~LCD_DISPLAYON;
   command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void LiquidC::display() {
+void HD44780::display() {
   _displaycontrol |= LCD_DISPLAYON;
   command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turns the underline cursor on/off
-void LiquidC::noCursor() {
+void HD44780::noCursor() {
   _displaycontrol &= ~LCD_CURSORON;
   command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void LiquidC::cursor() {
+void HD44780::cursor() {
   _displaycontrol |= LCD_CURSORON;
   command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // Turn on and off the blinking cursor
-void LiquidC::noBlink() {
+void HD44780::noBlink() {
   _displaycontrol &= ~LCD_BLINKON;
   command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
-void LiquidC::blink() {
+void HD44780::blink() {
   _displaycontrol |= LCD_BLINKON;
   command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
 // These commands scroll the display without changing the RAM
-void LiquidC::scrollDisplayLeft() {
+void HD44780::scrollDisplayLeft() {
   command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
 }
-void LiquidC::scrollDisplayRight() {
+void HD44780::scrollDisplayRight() {
   command(LCD_CURSORSHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
 }
 
 // This is for text that flows Left to Right
-void LiquidC::leftToRight() {
+void HD44780::leftToRight() {
   _displaymode |= LCD_ENTRYLEFT;
   command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This is for text that flows Right to Left
-void LiquidC::rightToLeft() {
+void HD44780::rightToLeft() {
   _displaymode &= ~LCD_ENTRYLEFT;
   command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This will 'right justify' text from the cursor
-void LiquidC::autoscroll() {
+void HD44780::autoscroll() {
   _displaymode |= LCD_ENTRYSHIFTINCREMENT;
   command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // This will 'left justify' text from the cursor
-void LiquidC::noAutoscroll() {
+void HD44780::noAutoscroll() {
   _displaymode &= ~LCD_ENTRYSHIFTINCREMENT;
   command(LCD_ENTRYMODESET | _displaymode);
 }
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void LiquidC::createChar(uint8_t location, uint8_t charmap[]) {
+void HD44780::createChar(uint8_t location, uint8_t charmap[]) {
   location &= 0x7; // we only have 8 locations 0-7
   command(LCD_SETCGRAMADDR | (location << 3));
   for (int i=0; i<8; i++) {
@@ -247,10 +269,12 @@ void LiquidC::createChar(uint8_t location, uint8_t charmap[]) {
 
 /*********** mid level commands, for sending data/cmds */
 
-inline void LiquidC::command(uint8_t value) {
+void HD44780::command(uint8_t value) {
   send(value, LOW);
 }
 
-inline void LiquidC::write(uint8_t value) {
-  send(value, HIGH);
+// acts as an arduino Printer
+size_t HD44780::write(uint8_t value) {
+    send(value, HIGH);
+    return 1;
 }

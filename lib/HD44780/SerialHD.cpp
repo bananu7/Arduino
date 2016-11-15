@@ -1,8 +1,33 @@
 #include "SerialHD.hpp"
 
-SerialHD::SerialHD(Sender sender)
+SerialHD::SerialHD(comm::Sender sender)
     : sender(sender)
 {
+    /*
+    shiftRegister pins:
+
+        1: rs
+        2: enable
+        3: -not-used-
+        4-7: d4-d7
+
+        we are not using RW so RW is zero or 255
+    */
+
+    init(
+        1,      // 4-bit mode
+        1,      // rs
+        255,    // rw
+        2,      // enable
+        0,      // d0
+        0,
+        0,
+        0,
+        4,
+        5,
+        6,
+        7       // d7
+    );
 }
 
 void SerialHD::write4bits(uint8_t value) {
@@ -29,7 +54,7 @@ void SerialHD::pulseEnable() {
 }
 
 void SerialHD::spiSendOut() {
-    serial.send(_bitString);
+    sender.send(_bitString);
 }
 
 void SerialHD::send(uint8_t value, uint8_t mode) {
