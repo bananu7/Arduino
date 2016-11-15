@@ -67,7 +67,7 @@ class Sender {
     SenderI* impl;
 public:
     Sender(SenderI* impl) : impl(impl) { }
-    ~Sender() { delete impl; }
+    //~Sender() { delete impl; }
 
     inline void send(byte b) { impl->send(b); }
     inline void send(byte a, byte b) { impl->send(a, b); }

@@ -1,56 +1,54 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 
 #include <Communication.h>
 #include <Maxim.h>
-#include <HD44780.h>
+#include <SerialHD.hpp>
 
-int main(void)
-{
-	init();
+Maxim* m;
+SerialHD* lcd;
 
-  #if defined(USBCON)
-  	USB.attach();
-  #endif
+int hour = 23;
+int minute = 44;
+int second = 45;
 
-  // setup
-  //LedPanel<10>* panel;
-  using Pins = comm::MultiplexLatcherPins<2,3,4>;
+using Pins = comm::MultiplexLatcherPins<2,3,4>;
 
-  int hour = 1;
-  int minute = 00;
-  int second = 0;
-  auto m = maxim::Maxim(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<4, Pins::pins>()));
+void setup() {
+	  m = new Maxim(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<4, Pins::pins>()));
 
-  // loop
-  while(true) {
-    second += 1;
-    if (second >= 60) {
-        second = 0;
-        minute += 1;
-    }
+		delay(10);
 
-    if (minute >= 60) {
-        minute = 0;
-        hour += 1;
-    }
+		lcd = new SerialHD(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<6, Pins::pins>()));
+		lcd->begin(16, 2);
+		delay(10);
 
-    if (hour >= 24) {
-        hour = 0;
-    }
+		//m->writeNumber(0, 0);
+		//m->writeNumber(0, 1);
+}
 
-    m.writeNumber(hour * 100 + minute, 0);
-    m.writeNumber(second, 1);
-
-    delay(1000);
-    /*panel->data(false, false, false, false, false, false);
-    panel->present();
-    delay(500);
-    panel->data(false, false, false, false, true, true);
-    panel->present();
-    delay(500);*/
-
-		if (serialEventRun) serialEventRun();
+void loop() {
+	second += 1;
+	if (second >= 60) {
+			second = 0;
+			minute += 1;
 	}
 
-	return 0;
+	if (minute >= 60) {
+			minute = 0;
+			hour += 1;
+	}
+
+	if (hour >= 24) {
+			hour = 0;
+	}
+
+	m->writeNumber(second, 0);
+	//m->writeNumber(hour * 100 + minute, 1);
+
+	delay(1000);
+
+	lcd->home();
+	lcd->print("test");
+
+	//m->writeNumber(second, 1);
 }
