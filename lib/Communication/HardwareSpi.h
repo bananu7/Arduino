@@ -1,8 +1,13 @@
 #pragma once
+#include <SPI.h>
+
+namespace comm {
 
 class HardwareSpi {
 public:
     void beginTransmission();
-    void transmit(byte b);
     void endTransmission();
+    void transmit(byte b);
 };
+
+}

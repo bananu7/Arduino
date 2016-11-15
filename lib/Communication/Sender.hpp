@@ -1,12 +1,15 @@
 #pragma once
+#include <Arduino.h>
+
+namespace comm {
 
 template<class Transport, class Latcher>
 class Sender {
-    Transport const& transport;
-    Latcher const& latcher;
+    Transport transport;
+    Latcher latcher;
 
 public:
-    Sender(Transport const& transport, Latcher const& latcher)
+    Sender(Transport transport, Latcher latcher)
         : transport(transport)
         , latcher(latcher)
     {
@@ -29,7 +32,18 @@ public:
         latcher.off();
     }
 
-    template<int n>
+    inline void send(byte a, byte b, byte c, byte d) {
+        latcher.on();
+        transport.beginTransmission();
+        transport.transmit(a);
+        transport.transmit(b);
+        transport.transmit(c);
+        transport.transmit(d);
+        transport.endTransmission();
+        latcher.off();
+    }
+
+    /*template<int n>
     inline void send(byte bytes[n]) {
         latcher.on();
         transport.beginTransmission();
@@ -38,5 +52,12 @@ public:
         }
         transport.endTransmission();
         latcher.off();
-    }
+    }*/
 };
+
+template<class Transport, class Latcher>
+inline Sender<Transport, Latcher> make_sender(Transport transport, Latcher latcher) {
+    return { transport, latcher };
+}
+
+}

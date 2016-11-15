@@ -1,5 +1,11 @@
 #pragma once
 
+namespace comm {
+
+/*
+This is a simple latcher class that toggles the pin on and off.
+*/
+
 template<int pin>
 class SimpleLatcher {
 public:
@@ -15,3 +21,5 @@ public:
         digitalWrite(pin, HIGH);
     }
 };
+
+}

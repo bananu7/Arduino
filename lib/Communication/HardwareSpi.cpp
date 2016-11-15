@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include "HardwareSpi.h"
 
+namespace comm {
+
 const int clockDivider = SPI_CLOCK_DIV4;
 const int dataMode = SPI_MODE0;
 const int bitOrder = MSBFIRST; 
@@ -24,4 +26,6 @@ void HardwareSpi::endTransmission() {
 
 void HardwareSpi::transmit(byte b) {
     SPI.transfer(b);
+}
+
 }
