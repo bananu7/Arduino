@@ -31,13 +31,12 @@ public:
     void createChar(uint8_t location, uint8_t charmap[]);
     void setCursor(uint8_t col, uint8_t row); 
 
+    size_t write(uint8_t) override;
 protected:
     void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
           uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
           uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
     
-
-    size_t write(uint8_t) override;
     void command(uint8_t);
 
     virtual void write4bits(uint8_t) = 0;
