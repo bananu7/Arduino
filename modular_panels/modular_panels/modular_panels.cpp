@@ -14,16 +14,14 @@ int second = 45;
 using Pins = comm::MultiplexLatcherPins<2,3,4>;
 
 void setup() {
-	  m = new Maxim(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<4, Pins::pins>()));
-
+	  m = new Maxim(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<4, Pins::pins, 5>()));
+		m->writeNumber(1338, 1);
+		m->writeNumber(1337, 0);
 		delay(10);
 
-		lcd = new SerialHD(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<6, Pins::pins>()));
+		lcd = new SerialHD(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<6, Pins::pins, 5>()));
 		lcd->begin(16, 2);
 		delay(10);
-
-		//m->writeNumber(0, 0);
-		//m->writeNumber(0, 1);
 }
 
 void loop() {
@@ -43,12 +41,10 @@ void loop() {
 	}
 
 	m->writeNumber(second, 0);
-	//m->writeNumber(hour * 100 + minute, 1);
-
-	delay(1000);
+	m->writeNumber(hour * 100 + minute, 1);
 
 	lcd->home();
-	lcd->print("test");
+	lcd->print("test " + String(second));
 
-	//m->writeNumber(second, 1);
+	delay(100);
 }
