@@ -1,10 +1,10 @@
 #pragma once
-#include <HardwareSpi.h>
+#include "../Communication/Sender.hpp"
 
-template<int latchPin>
+template<class Sender>
 class LedPanel {
     byte state = 0;
-    OutDevice<HardwareSpi, latchPin> device;
+    Sender sender;
 
     void setLed(const int n, const bool on) {
         if (on) {
@@ -14,6 +14,8 @@ class LedPanel {
         }
     }
 public:
+    LedPanel(Sender sender) : sender(sender) { }
+
     void data(bool b1, bool b2, bool b3, bool b4, bool s1, bool s2) {
         setLed(1, b1);
         setLed(2, b2);
@@ -28,6 +30,6 @@ public:
     }
 
     void present() {
-        device.transmit(state);
+        sender.send(state);
     }
 };
