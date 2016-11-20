@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include "GameConnection.hpp"
 
 GameConnection gc;

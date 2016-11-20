@@ -4,7 +4,9 @@
 #include "SerialComs.hpp"
 #include "Utilities.hpp"
 
-#include "maxim.hpp"
+#include <Communication.h>
+#include <Maxim.h>
+#include <SerialHD.hpp>
 
 class GameConnection {
     unsigned long deadtime, deadtimeOld, controlTime, controlTimeOld;
@@ -13,6 +15,9 @@ class GameConnection {
     boolean connected = false;
     VesselData vesselData;
     SerialComs comm;
+
+    Maxim* m;
+    SerialHD* lcd;
 
     int input() {
         int returnValue = -1;
@@ -24,38 +29,48 @@ class GameConnection {
 
             switch(result.typeOfPacket) {
             case SerialComs::ReadResult::TypeOfPacket::HandShakePacket:
+                lcd->clear();
+                lcd->print("Handshake");
                 handshake(result.handShakePacket);
                 break;
             case SerialComs::ReadResult::TypeOfPacket::VesselData:
+                lcd->clear();
+                lcd->print("Data");
                 // Copy it over the previous state
                 vesselData = result.vesselData;
                 //Indicators(vesselData);
 
-                //bool SasStatus = vesselData.getControlStatus(AGSAS);
-                //panel->data(SasStatus, false, false, false, false, false);
-                //panel->present();
-                maxim::writeNumber(vesselData.AP);
+                int32_t ap = vesselData.AP * 10;
+                int32_t pe = vesselData.PE * 10;
+                m->writeNumber(ap, 0);
+                m->writeNumber(pe, 1);
+
+                lcd->clear();
+                lcd->print("SAS: " + String(vesselData.getControlStatus(AGSAS) ? "0" : "1"));
+                lcd->setCursor(0, 1);
+                lcd->print("Stage " + String(vesselData.CurrentStage) + "/" + String(vesselData.TotalStage));
+
                 break;
             }
 
             //We got some data, turn the green led on
-            digitalWrite(GLED,HIGH);
+            //digitalWrite(GLED,HIGH);
             connected = true;
         }
         else { //if no message received for a while, go idle
-            deadtime = now - deadtimeOld; 
+            deadtime = now - deadtimeOld;
             if (deadtime > IDLETIMER) {
                 deadtimeOld = now;
                 connected = false;
-                LEDSAllOff();
-            }    
+                //LEDSAllOff();
+            }
         }
 
         return returnValue;
     }
 
     void handshake(HandShakePacket handShakePacket){
-        digitalWrite(GLED,HIGH); 
+        //digitalWrite(GLED,HIGH);
 
         handShakePacket.id = 0;
         handShakePacket.M1 = 3;
@@ -68,7 +83,7 @@ class GameConnection {
 
     void output() {
         now = millis();
-        controlTime = now - controlTimeOld; 
+        controlTime = now - controlTimeOld;
         if (controlTime > CONTROLREFRESH){
             controlTimeOld = now;
 
@@ -103,8 +118,8 @@ class GameConnection {
     }
 
     void controlsInit() {
-        pinMode(SASPIN, INPUT_PULLUP);
-        pinMode(RCSPIN, INPUT_PULLUP);
+        //pinMode(SASPIN, INPUT_PULLUP);
+        //pinMode(RCSPIN, INPUT_PULLUP);
        // pinMode(CG1PIN, INPUT_PULLUP);
     }
 
@@ -112,12 +127,17 @@ public:
     void setup() {
         Serial.begin(38400);
 
-        initLEDS();
+        //initLEDS();
         controlsInit();
 
-        LEDSAllOff();
+        //LEDSAllOff();
 
-        maxim::setup();
+        m = new Maxim(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<4, comm::MultiplexLatcherPins<2,3,4>::pins, 5>()));
+
+        lcd = new SerialHD(make_sender(comm::HardwareSpi(), comm::MultiplexLatcher<6, comm::MultiplexLatcherPins<2,3,4>::pins, 5>()));
+        lcd->begin(16, 2);
+        lcd->clear();
+        lcd->print("Setup finished");
     }
 
     void update()

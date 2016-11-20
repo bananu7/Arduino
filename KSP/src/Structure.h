@@ -1,5 +1,7 @@
 #pragma once
 
+#include <inttypes.h>
+
 //pins for LEDs
 #define GLED 5
 #define YLED 6
@@ -111,7 +113,7 @@ struct VesselData
     byte CurrentStage;      //51  Current stage number
     byte TotalStage;        //52  TotalNumber of stages
 
-    bool getControlStatus(byte n) {
+    bool getControlStatus(byte n) const {
         return ((ActionGroups >> n) & 1) == 1;
     }
 
@@ -144,16 +146,15 @@ struct ControlPacket {
 
     inline void setMainControl(ControlElement e, bool state) {
         if (state)
-            MainControls |= (1 << static_cast<byte>(e)); 
+            MainControls |= (1 << static_cast<byte>(e));
         else
-            MainControls &= ~(1 << static_cast<byte>(e)); 
+            MainControls &= ~(1 << static_cast<byte>(e));
     }
 
     inline void setControlGroup(unsigned g, bool state) {
         if (state)
-            ControlGroup |= (1 << g); 
+            ControlGroup |= (1 << g);
         else
-            ControlGroup &= ~(1 << g); 
+            ControlGroup &= ~(1 << g);
     }
 };
-

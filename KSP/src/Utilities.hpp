@@ -2,6 +2,7 @@
 
 #include "Structure.h"
 
+/*
 inline void Indicators(VesselData const& VData) {
     int caution = 0;
     int warning = 0;
@@ -24,8 +25,9 @@ inline void Indicators(VesselData const& VData) {
     //digitalWrite(SASLED, VData.getControlStatus(AGSAS));
     digitalWrite(RCSLED, VData.getControlStatus(AGRCS));
     //digitalWrite(CG1LED, VData.getControlStatus(AGCustom01));
-}
+}*/
 
+/*
 inline void initLEDS() {
     pinMode(GLED,OUTPUT);
     digitalWrite(GLED,HIGH);
@@ -44,8 +46,9 @@ inline void initLEDS() {
 
     //pinMode(CG1LED,OUTPUT);
     //digitalWrite(CG1LED,HIGH);
-}
+}*/
 
+/*
 inline void LEDSAllOff() {
     digitalWrite(GLED,LOW);
     digitalWrite(YLED,LOW);
@@ -54,3 +57,4 @@ inline void LEDSAllOff() {
     digitalWrite(RCSLED,LOW);
     //digitalWrite(CG1LED,LOW);
 }
+*/
