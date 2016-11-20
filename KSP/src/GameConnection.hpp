@@ -34,14 +34,12 @@ class GameConnection {
                 handshake(result.handShakePacket);
                 break;
             case SerialComs::ReadResult::TypeOfPacket::VesselData:
-                lcd->clear();
-                lcd->print("Data");
                 // Copy it over the previous state
                 vesselData = result.vesselData;
                 //Indicators(vesselData);
 
-                int32_t ap = vesselData.AP * 10;
-                int32_t pe = vesselData.PE * 10;
+                int32_t ap = vesselData.AP;
+                int32_t pe = vesselData.PE;
                 m->writeNumber(ap, 0);
                 m->writeNumber(pe, 1);
 
@@ -63,6 +61,9 @@ class GameConnection {
                 deadtimeOld = now;
                 connected = false;
                 //LEDSAllOff();
+
+                lcd->clear();
+                lcd->print("Idle");
             }
         }
 
