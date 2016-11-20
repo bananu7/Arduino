@@ -10,53 +10,22 @@ together.
 #include "../Communication/Sender.hpp"
 
 class Maxim {
+    enum CodeB : byte{
+        // 0 to 9 are regular values 0-9;
+        Hyphen = 0b00001010,
+        E = 0b00001011,
+        H = 0b00001100,
+        L = 0b00001011,
+        P = 0b00001110,
+        Blank = 0b00001111
+    };
+
     comm::Sender sender;
     
-    void writeDigit(int place, int digit, int screen) {
-        if (screen == 1) {
-          sender.send(place, digit, 0,  0); 
-        }
-        else {
-          sender.send(0, 0, place, digit); 
-        }
-    }
+    void writeDigit(int place, byte digit, int screen, bool dot = false);
 
 public:
-    Maxim(comm::Sender sender)
-        : sender(sender)
-    {
-        // disable shutdown
-        sender.send(0x0c, 0x01, 0x0c, 0x01);
+    Maxim(comm::Sender sender);
 
-        // set decode
-        sender.send(0x09, 0xff, 0x09, 0xff);
-
-        // disable demo
-        sender.send(0xff, 0x00, 0xff, 0x00);
-
-        // scan limit to all digits
-        sender.send(0x0b, 0x07, 0x0b, 0x07);
-
-        // intensity
-        sender.send(0x0a, 0x00, 0x00, 0x00);
-        sender.send(0x00, 0x00, 0x0a, 0x00);
-
-        for (int i = 1; i <= 8; ++i) {
-            sender.send(i, 0x7f, i, 0x7f);
-        }
-    }
-
-    void writeNumber(int32_t number, int screen) {
-        for (int i = 1; i <= 8; ++i) {
-            if (number != 0) {
-                int digit = number % 10;
-                writeDigit(i, digit, screen);
-                number = number / 10;    
-            } else {
-                // Fill in blank
-                //writeDigit(i, 0x7f, screen);
-                writeDigit(i, 0x0, screen);
-            }
-        }
-    }
+    void writeNumber(int32_t number, int screen);
 };
