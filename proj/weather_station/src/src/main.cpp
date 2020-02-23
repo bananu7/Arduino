@@ -1,15 +1,14 @@
 #include <Arduino.h>
 #include <SPI.h>
-//#include <EEPROM.h>
 
 #include <Bme280BoschWrapper.h>
-#include <Time.h>
 
 #include <avr/wdt.h>
 #include <avr/sleep.h>
 
 #include "winbond_spiflash.hpp"
 #include "ExtractArguments.hpp"
+#include "WeatherTime.hpp"
 
 WinbondSpiFlash<10> flash;
 Bme280BoschWrapper bme(true);
@@ -17,26 +16,7 @@ Bme280BoschWrapper bme(true);
 bool g_command_ready(false);
 String g_command;
 
-
-void setup(void) {
-    SPI.begin();
-    SPI.setDataMode(0);
-    SPI.setBitOrder(MSBFIRST);
-    Serial.begin(9600);
-    Serial.println("");
-
-    Serial.println("Ready"); 
-
-    bme.beginSPI(9);
-
-    // Go to sleep otherwise
-    // disable ADC
-    WDTCSR = bit (WDCE) | bit (WDE);
-    // set interrupt mode and an interval 
-    WDTCSR = bit (WDIE) | bit (WDP2) | bit (WDP1);    // set WDIE, and 1 second delay
-    //WDTCSR = bit (WDIE) | bit (WDP3) | bit (WDP0);    // set WDIE, and 8 second delay
-    wdt_reset();
-}
+int16_t sampleNumber;
 
 void serialEvent() {
     char c;
@@ -51,8 +31,77 @@ void serialEvent() {
     }
 }
 
-void printCurrentTime() {
-    Serial.printf("%d-%d-%d %d:%d\n", year(), month(), day(), hour(), minute());
+void setup(void) {
+    Serial.println("Initializing..."); 
+    SPI.begin();
+    SPI.setDataMode(0);
+    SPI.setBitOrder(MSBFIRST);
+    Serial.begin(9600);
+    Serial.println("");
+
+    Serial.println("Reading time from EEPROM..."); 
+    loadTimeFromEEPROM();
+    Serial.print("Current time: ");
+    printCurrentTime();
+
+    bme.beginSPI(9);
+
+    // first time only
+    EEPROM.write(10, 0);
+    EEPROM.write(11, 0);
+
+    {
+        auto l = EEPROM.read(10);
+        auto h = EEPROM.read(11);
+        sampleNumber = (h << 8) | l;
+    }
+    Serial.printf("Current sample number: %d", sampleNumber);
+
+    // Go to sleep otherwise
+    // disable ADC
+    WDTCSR = bit (WDCE) | bit (WDE);
+    // set interrupt mode and an interval 
+    WDTCSR = bit (WDIE) | bit (WDP2) | bit (WDP1);    // set WDIE, and 1 second delay
+    //WDTCSR = bit (WDIE) | bit (WDP3) | bit (WDP0);    // set WDIE, and 8 second delay
+    wdt_reset();
+}
+
+struct __attribute__((packed)) Sample {
+    int16_t year;
+    int8_t month;
+    int8_t day;
+    int8_t hour;
+    int8_t minute;
+    
+    int32_t temperature;
+    uint32_t humidity;
+    uint16_t reserved;
+};
+
+Sample createCurrentSample() {
+    bme.measure();
+    Sample result;
+    result.year = year();
+    result.month = month();
+    result.day = day();
+    result.hour = hour();
+    result.minute = minute();
+    result.temperature = bme.getTemperature();
+    result.humidity = bme.getHumidity();
+
+    return result;
+}
+
+void saveCurrentSample() {
+    Sample s = createCurrentSample();
+    uint8_t page[256];
+    memset(page, 0xcc, 256);
+    memcpy(page, &s, sizeof(s));
+
+    flash.write_page(sampleNumber, page);
+    sampleNumber++;
+    EEPROM.write(10, sampleNumber & 0xFF);
+    EEPROM.write(11, (sampleNumber >> 8) & 0xFF);
 }
 
 // watchdog interrupt
@@ -60,6 +109,7 @@ ISR (WDT_vect)
 {
    //wdt_disable();  // disable watchdog
     printCurrentTime();
+    saveCurrentSample();
 
     WDTCSR = bit (WDCE) | bit (WDE);
     // set interrupt mode and an interval 
@@ -124,7 +174,7 @@ void loop(void) {
                 setTime(args.data[3], args.data[4], 0, args.data[2], args.data[1], args.data[0]);
             }
 
-            //EEPROM.write(0, val);
+            saveCurrentTimeToEEPROM();
 
             Serial.print("\nTime set to:");
             printCurrentTime();
