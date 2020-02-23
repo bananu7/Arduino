@@ -8,20 +8,19 @@
 #define pageProgramStat   0x02 // Address Status Page Program
 #define chipCommandId     0x9f // Address Status Read Id
 
-#define SS 10
- 
 const int WB_READ_STATUS_REG_1 = 0x05;
  
-
+template<int SS_PIN>
 class WinbondSpiFlash {
     const int LED_PIN = 2;
+
     /*
     * See the timing diagram in section 9.2.10 of the
     * data sheet located below, "Read Data (03h)".
     */
     void _read_page(word page_number, byte *page_buffer) {
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);
         SPI.transfer(readData);
         
         // Construct the 24-bit address from the 16-bit page
@@ -33,7 +32,7 @@ class WinbondSpiFlash {
         for (int i = 0; i < 256; ++i) {
             page_buffer[i] = SPI.transfer(0);
         }
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         not_busy();
     }
 
@@ -41,18 +40,18 @@ class WinbondSpiFlash {
     See the timing diagram in section 9.2.26 of the data sheet, "Chip Erase (C7h / 06h)". (Note:
     */
     void _chip_erase(void) {
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(writeEnable);
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(chipErase);
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         
         /* See notes on rev 2 
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(writeDisable);
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         */
         not_busy();
     }
@@ -60,22 +59,22 @@ class WinbondSpiFlash {
     // Check if the memory is busy
     void not_busy(void) {
         digitalWrite(LED_PIN, HIGH); 
-        digitalWrite(SS, HIGH);  
-        digitalWrite(SS, LOW);
+        digitalWrite(SS_PIN, HIGH);  
+        digitalWrite(SS_PIN, LOW);
         SPI.transfer(WB_READ_STATUS_REG_1);       
         while (SPI.transfer(0) & 1) {}; 
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         digitalWrite(LED_PIN, LOW);  
     }
 
     void _chipCmdId(byte *b1, byte *b2, byte *b3) {
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);
         SPI.transfer(chipCommandId);
         *b1 = SPI.transfer(0); // manufacturer id
         *b2 = SPI.transfer(0); // memory type
         *b3 = SPI.transfer(0); // capacity
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         not_busy();
     }  
 
@@ -105,15 +104,15 @@ class WinbondSpiFlash {
 
     void resetStatusReg() {
         Serial.println("Reset status reg"); 
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(writeEnable);
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);
         SPI.transfer(0x01);
         SPI.transfer(0);
         SPI.transfer(0);
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         not_busy();
     }  
 
@@ -171,11 +170,11 @@ public:
         * See the timing diagram in section 9.2.21 of the
         * data sheet, "Page Program (02h)".
         */
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(writeEnable);
-        digitalWrite(SS, HIGH);
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, HIGH);
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(pageProgramStat);
         SPI.transfer((page_number >>  8) & 0xFF);
         SPI.transfer((page_number >>  0) & 0xFF);
@@ -183,11 +182,11 @@ public:
         for (int i = 0; i < 256; ++i) {
             SPI.transfer(page_buffer[i]);
         }
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         ///* See notes on rev 2
-        digitalWrite(SS, LOW);  
+        digitalWrite(SS_PIN, LOW);  
         SPI.transfer(writeDisable);
-        digitalWrite(SS, HIGH);
+        digitalWrite(SS_PIN, HIGH);
         //*/
         not_busy();
     } 

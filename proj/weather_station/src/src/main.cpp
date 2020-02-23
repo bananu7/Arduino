@@ -4,8 +4,10 @@
 #include <Bme280BoschWrapper.h>
 
 #include "winbond_spiflash.hpp"
+#include "ExtractArguments.hpp"
 
-WinbondSpiFlash flash;
+WinbondSpiFlash<10> flash;
+Bme280BoschWrapper bme(true);
 
 bool g_command_ready(false);
 String g_command;
@@ -19,6 +21,8 @@ void setup(void) {
     //resetStatusReg();
 
     Serial.println("Ready"); 
+
+    bme.beginSPI(9);
 }
 
 void serialEvent() {
@@ -34,34 +38,6 @@ void serialEvent() {
     }
 }
 
-template<int n>
-struct Result {
-    bool result;
-    int32_t data[n];
-};
-
-template<int n>
-Result<n> extractArguments(String const& str) {
-    int pos = 0;
-    Result<n> result;
-    result.result = false;
-
-    for (int i = 0; i < n; ++i) {
-        pos = str.indexOf(" ", pos);
-        if (pos == -1) {
-            Serial.println("Syntax error in write_byte");
-            return result;
-        }
-        // pos is pointing to space now
-        result.data[i] = str.substring(pos + 1).toInt();
-        // move pos to point to first digit
-        pos += 1;
-    }
-
-    result.result = true;
-    return result;
-}
-
 void loop(void) {
     if (g_command_ready) {
         if (g_command == "chipCmdIda") {
@@ -73,6 +49,12 @@ void loop(void) {
         else if (g_command == "read_all_pages") {
             flash.read_all_pages();
         }
+        else if (g_command == "read_temperature") {
+            bme.measure();
+            Serial.print("temperature: ");
+            Serial.println(bme.getTemperature());
+        }
+
         else if (g_command.startsWith("read_page")) {
             auto args = extractArguments<1>(g_command);
             if (args.result == false) {
