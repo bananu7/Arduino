@@ -13,3 +13,9 @@ I couldn't make the prototype on the Uno, because pretty much all the external c
 This worked well with one thing, however its limited memory meant that i could fit all the drivers. The BME sensor driver was particularly large.
 
 That prompted the move to ATMega. I made another breakout and so far this is as far as I got; with the software able to read the sensor data and store it in the flash memory.
+
+## Development log
+
+* I've managed to either destroy or buy problematic Flash (that didn't hurt) and a mega (that hurt way more).
+* As far as programming the Mega, I started doing non-bootloader loading, but quickly realized it's actually much less convenient than with a bootloader. As a reminder, a bootloader runs before your code (slowing down startup a bit), but allows you to load a program via serial. This means i just need 5 wires hooked up to get both programming and serial capabilities, which is really convenient.
+* In order to enable booting from bootloader (and in fact putting it on there), a chip needs to be connected to an SPI AVRISP-like programmer to burn the correct fuse values in and transfer the bootloader code. The bootloader binary is in the repo.
