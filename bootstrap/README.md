@@ -37,3 +37,30 @@ before starting `avrdude`.
 
 ### ATtiny2313A
 Use SPI method. Use ATtinyCore board template for Arduino IDE.
+
+
+## Boards
+
+### Blue pill (STM32F103C8)
+
+* When using PlatformIO, Serial won't work by default. In Arduino IDE, it uses Maple core, which enables USB Serial by default. In PlatformIO this needs to be done explicitly via:
+
+```
+build_flags = -D USBCON 
+              -D PIO_FRAMEWORK_ARDUINO_ENABLE_CDC
+              -D HAL_PCD_MODULE_ENABLED
+              -D USBD_VID=0x1EAF
+              -D USBD_PID=0x0004
+              -D USB_PRODUCT=\"bluepill\"
+```
+
+And in the actual file:
+
+```
+#include <Arduino.h>
+#include <USBSerial.h>
+
+void setup() {
+  SerialUSB.begin();
+}
+```
