@@ -4,6 +4,9 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
+#include <algorithm>
+#include <array>
+
 #define Serial SerialUSB
 
 #define COLUMS          20
@@ -33,25 +36,48 @@ void setup() {
   Serial.println("\nI2C Scanner");
 }
 
+//---------------------------------------------------
+
 int counter = 0;
+std::array<char, 64> buffer;
 
-void loop() {
-  analogWrite(LED_PIN, 12);   // turn the LED on (HIGH is the voltage level)
-  delay(100);              // wait for a second
-  analogWrite(LED_PIN, 0);    // turn the LED off by making the voltage LOW
-  delay(100);              // wait for a second
+void handleSerial() {
+  std::size_t incomingData = Serial.available();
+  if (incomingData > 0) {
+    analogWrite(LED_PIN, 255);
 
-  /*
-  Wire.beginTransmission(0x27);
-  int error = Wire.endTransmission();
+    incomingData = std::min(incomingData, buffer.size());
+    std::fill(buffer.begin(), buffer.end(), '\0');
+    Serial.readBytes(buffer.data(), incomingData);
 
-  if (error == 0) {
-    Serial.println("found!");
-  } else {
-    Serial.println("nope!");
-  }
-  */
+    switch (buffer[0]) {
+      case 'p': {
+        const int posDigit1 = buffer[1] - '0';
+        const int posDigit2 = buffer[2] - '0';
 
+        const int row = posDigit1 <= 3 ? posDigit1 : posDigit1 - 4;
+        const int col = posDigit1 <= 3 ? posDigit2 : posDigit2 + 10;
+
+        lcd.setCursor(col,row);
+        lcd.print(&buffer[3]);
+
+        break;
+      }
+      case 'h': {
+        const int state = buffer[1] - '0';
+        if (state == 0) {
+          lcd.noBacklight();
+        } else {
+          lcd.backlight();
+        }
+      }
+    }
+  } 
+
+  analogWrite(LED_PIN, 0);
+}
+
+void handleButton() {
   if (digitalRead(BTN_RED_PIN) == LOW) {
     Serial.println("Button press");
 
@@ -60,5 +86,11 @@ void loop() {
 
     counter += 1;
   }
+}
 
+void loop() {
+  handleSerial();
+  handleButton();
+
+  delay(100);
 }
