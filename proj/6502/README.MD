@@ -16,7 +16,7 @@ I want to make a custom computer for educational purposes. It's supposed to be m
 | CPU     | R6502P | Rockwell | Unfortunately this one requires keeping the clock high for standby, as it doesn't have static registers. |
 | VIA (interface adapter) | 6522 | MOS | |
 | EEPROM | AT28C256 | ATmel | | [PDF](http://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
-| RAM | HM62256ALP-10 | | 32/768-word x 8-bit High Speed CMOS Static | [PDF](http://pdf.datasheetcatalog.com/datasheets/90/176972_DS.pdf) |
+| RAM | HM62256ALP‑10 | Hitachi (?) | 32/768-word x 8-bit High Speed CMOS Static | [PDF](http://pdf.datasheetcatalog.com/datasheets/90/176972_DS.pdf) |
 | CRT controller | MC6845P | Motorola | | [PDF](http://pdf.datasheetcatalog.com/datasheet_pdf/motorola/MC6845L_and_MC6845P.pdf) |
 
 ### Connectors, misc.
