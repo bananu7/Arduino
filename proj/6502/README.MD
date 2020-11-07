@@ -10,8 +10,10 @@ I want to make a custom computer for educational purposes. It's supposed to be m
 
 ### ICs:
 
-| Purpose | Number | Manufacturer| Notes | Datasheet |
-| CPU | R6502P | Rockwell | Unfortunately this one requires keeping the clock high for standby, as it doesn't have static registers. |
+
+| Purpose | Number | Manufacturer | Notes | Datasheet |
+|---------|--------|--------------|-------|-----------|
+| CPU     | R6502P | Rockwell | Unfortunately this one requires keeping the clock high for standby, as it doesn't have static registers. |
 | VIA (interface adapter) | 6522 | MOS | |
 | EEPROM | AT28C256 | ATmel | | [PDF](http://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
 | RAM | HM62256ALP-10 | | 32/768-word x 8-bit High Speed CMOS Static | [PDF](http://pdf.datasheetcatalog.com/datasheets/90/176972_DS.pdf) |
