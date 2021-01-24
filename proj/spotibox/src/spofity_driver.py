@@ -3,7 +3,9 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 import os
-import time
+from datetime import datetime
+from time import sleep
+
 os.environ['SPOTIPY_CLIENT_ID']="8be610ea3a3b4c4da47f78f1c2570809"
 os.environ['SPOTIPY_CLIENT_SECRET']="57d59080a0424dc29640b562f966bc27"
 os.environ['SPOTIPY_REDIRECT_URI']="https://banachewicz.pl"
@@ -15,25 +17,37 @@ ser = serial.Serial('COM10')
 
 def get_current_track():
     curr = sp.current_playback()
-    print(curr)
 
     song = curr['item']['name']
     artist = curr['item']['artists'][0]['name']
+    print(song)
+    print(artist)
 
-    ser.write(('p00' + song).encode('utf-8'))
+    ser.write(b'c\n')
+    ser.write(('p00' + song + '\n').encode('utf-8'))
+    ser.write(('p10' + artist + '\n').encode('utf-8'))
     ser.flush()
-    time.sleep(1)
-    ser.write(('p10' + artist).encode('utf-8'))
 
     #results = sp.current_user_saved_tracks()
     #for idx, item in enumerate(results['items']):
     #    track = item['track']
     #    print(idx, track['artists'][0]['name'], " – ", track['name'])
 
+def print_clock():
+    now = datetime.now()
+
+    h = now.hour
+    h = str(h) if h > 9 else ' '+str(h)
+    m = now.minute
+    m = str(m) if m > 9 else ' '+str(m)
+
+    ser.write(('p75' + h + ':' + m + '\n').encode('utf-8'))
 
 def main():
-
-    get_current_track()
+    while True:
+        get_current_track()
+        print_clock()
+        sleep(30)
 
      
 if __name__ == "__main__":

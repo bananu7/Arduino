@@ -42,13 +42,20 @@ int counter = 0;
 std::array<char, 64> buffer;
 
 void handleSerial() {
-  std::size_t incomingData = Serial.available();
-  if (incomingData > 0) {
+  std::size_t incomingDataSize = Serial.available();
+  while (incomingDataSize > 0) {
+    Serial.print("Data incoming, size = ");
+    Serial.println(incomingDataSize);
+
     analogWrite(LED_PIN, 255);
 
-    incomingData = std::min(incomingData, buffer.size());
     std::fill(buffer.begin(), buffer.end(), '\0');
-    Serial.readBytes(buffer.data(), incomingData);
+
+    Serial.setTimeout(3000);
+    std::size_t commandSize = Serial.readBytesUntil('\n', buffer.data(), buffer.size());
+    if (commandSize == 0)  {
+      break;
+    }
 
     switch (buffer[0]) {
       case 'p': {
@@ -70,9 +77,16 @@ void handleSerial() {
         } else {
           lcd.backlight();
         }
+        break;
+      }
+      case 'c': {
+        lcd.clear();
+        break;
       }
     }
-  } 
+
+    incomingDataSize = Serial.available();
+  }
 
   analogWrite(LED_PIN, 0);
 }
