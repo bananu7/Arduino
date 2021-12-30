@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>Box</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" href="text/static/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="text/static/style.css">
+    </head>
+    <body>
+        <div class=main>
+            <h1>Box</h1>
+            <input type="text" id="t" name="t">
+            <div id="status" class="status"></div>
+            <button onclick="go()">Send</button>
+            <script>
+            function go() {
+                const t = document.querySelector("#t").value;
+
+                const formData = new FormData();
+                formData.append('text', t);
+
+                fetch("text/api", {
+                    method: 'POST',
+                    body: formData,
+                })
+                //.then(response => response.json())
+                .then(result => {
+                    document.querySelector("#status").innerText = "OK";
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            </script>
+        </div>
+    </body>
+</html>

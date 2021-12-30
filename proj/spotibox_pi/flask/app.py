@@ -4,14 +4,9 @@ from plcd import *
 from flask import request, Flask, send_file
 app = Flask(__name__)
 
-@app.route("/")
-def ix():
-    #return "ok"
-    return send_file('index.html')
-
-@app.route("/text", methods=['GET'])
+@app.route("/api", methods=['POST'])
 def text():
-    t = request.args.get('t', default='', type=str)
+    t = request.form.get('text', default='', type=str)
     lcd_init()
     lcd_string(t[0:20], LCD_LINE_1)
     lcd_string(t[20:40], LCD_LINE_2)

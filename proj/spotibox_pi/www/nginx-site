@@ -31,36 +31,37 @@ server {
 	#
 	listen 443 ssl default_server;
 	listen [::]:443 ssl default_server;
-	#
-	# Note: You should disable gzip for SSL traffic.
-	# See: https://bugs.debian.org/773332
-	#
-	# Read up on ssl_ciphers to ensure a secure configuration.
-	# See: https://bugs.debian.org/765782
-	#
+
+	gzip off;
+
 	ssl_certificate /etc/letsencrypt/live/home.banachewicz.pl/fullchain.pem;
 	ssl_certificate_key /etc/letsencrypt/live/home.banachewicz.pl/privkey.pem;
 
-	
-	root /var/www/html;
-
-	index index.html index.htm index.nginx-debian.html;
-
 	server_name home.banachewicz.pl;
 
-	location / {
-		# First attempt to serve request as file, then
-		# as directory, then fall back to displaying a 404.
-		try_files $uri $uri/ =404;
+	root /var/www;
+
+	location = /text {
+		try_files /flask/static/index.html =500;
 	}
 
-	#location = /text { rewrite ^ /; }
-	#location /text { try_files $uri @text; }i
 	location /text {
 		rewrite /text/?(.*)$ /$1 break;
 		include uwsgi_params;
 		uwsgi_pass unix:///tmp/text.sock;
 	}
+
+	location /text/static { 
+		alias /var/www/flask/static;
+	}
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		root /var/www/html;
+		try_files $uri $uri/ =401;
+	}
+
 }
 
 

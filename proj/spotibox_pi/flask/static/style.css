@@ -3,9 +3,15 @@ body {
   margin: 0;
 }
 
+.status {
+  background-color: green;
+  padding: 10px;
+}
+
 .main {
   width: 80%;
   height: 80%;
   margin: auto;
+  padding: 10px;
 }
 
