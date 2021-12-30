@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <title>Box</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class=main>
+            <h1>Box</h1>
+            <input type="text" id="t" name="t">
+            <br>
+            <button onclick="go()">Send</button>
+            <script>
+            function go() {
+                const t = document.querySelector("#t").value;
+                fetch("text?t=" + t);
+            }
+            </script>
+        </div>
+    </body>
+</html>

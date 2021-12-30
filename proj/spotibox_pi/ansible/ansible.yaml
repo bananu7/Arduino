@@ -1,0 +1,29 @@
+---
+- name: Set up web server
+  hosts: webservers
+  remote_user: root
+
+  tasks:
+  - name: Install nginx
+    ansible.builtin.apt:
+      name: nginx
+      state: present
+  - name: Write the nginx config file
+    ansible.builtin.template:
+      src: /default
+      dest: /etc/nginx/sites-available/default
+
+  - name: Install uwsgi
+    ansible.builtin.apt:
+      name: uwsgi
+      state: present
+  - name: Write the uwsgi app ini
+    ansible.builtin.template:
+      src: /text.init
+      dest: /etc/uwsgi/apps-enabled/text.ini
+
+  - name: Install flask
+    ansible.builtin.apt:
+      name: python3-flask
+      state: present
+
